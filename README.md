@@ -181,6 +181,38 @@ The action uses robust YAML parsing with `yq` to precisely track only the worklo
 - `jq` for JSON processing
 - Appropriate RBAC permissions
 
+## Troubleshooting
+
+### Immutable Field Errors
+
+If you encounter an error like:
+```
+The Deployment "my-app" is invalid: spec.selector: Invalid value: ...: field is immutable
+```
+
+**Cause:** You changed an immutable field (like `spec.selector` labels) in an existing Deployment, StatefulSet, or other resource.
+
+**Solutions:**
+
+1. **Delete and recreate the resource:**
+   ```yaml
+   - name: Delete old deployment
+     run: kubectl delete deployment my-app -n my-namespace --ignore-not-found=true
+     continue-on-error: true
+
+   - name: Apply new configuration
+     uses: KoalaOps/kustomize-apply@v1
+     with:
+       overlay_dir: deploy/overlays/production
+       namespace: my-namespace
+   ```
+
+2. **Use a different resource name** - Rename your deployment and deploy it as a new resource
+
+3. **Use `kubectl replace --force`** - This deletes and recreates the resource (causes brief downtime)
+
+The action will automatically detect this error and provide detailed guidance in the workflow summary.
+
 ## Notes
 
 - Designed to work with kustomize-inspect for metadata

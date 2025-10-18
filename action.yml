@@ -122,7 +122,92 @@ runs:
           echo "🚀 Applying manifests"
         fi
 
-        "${CMD[@]}" | tee /tmp/apply.out
+        # Run once; capture both streams with real-time output
+        if "${CMD[@]}" > >(tee /tmp/apply.out) 2> >(tee /tmp/apply.err >&2); then
+          APPLY_SUCCESS=true
+        else
+          APPLY_SUCCESS=false
+        fi
+
+        # Check for immutable field errors (case-insensitive, broader pattern)
+        if [ "$APPLY_SUCCESS" = "false" ] && grep -Eiq 'immutable.*field|field.*immutable' /tmp/apply.err 2>/dev/null; then
+          echo ""
+          echo "::error::Kubernetes detected an immutable field change"
+
+          # Robust resource extraction with fallbacks
+          RESOURCE_INFO="$(
+            awk '
+              match($0, /The[[:space:]]+([A-Za-z]+)[[:space:]]+"([^"]+)"/, m) {
+                print m[1] " \"" m[2] "\""; found=1; exit
+              }
+              match($0, /([A-Za-z]+)\/([A-Za-z0-9._-]+)/, m) {
+                print m[1] " \"" m[2] "\""; found=1; exit
+              }
+              END { if (!found) print "resource" }
+            ' /tmp/apply.err
+          )"
+
+          # Parse kind and name for actionable commands
+          RESOURCE_KIND="$(echo "$RESOURCE_INFO" | awk '{print $1}')"
+          RESOURCE_NAME="$(echo "$RESOURCE_INFO" | sed 's/^[^ ]* "\(.*\)"$/\1/')"
+
+          # Write detailed explanation with actual values
+          {
+            cat <<'MD'
+## ⚠️ Immutable Field Error
+
+**What happened:**
+Kubernetes rejected the deployment because you tried to change an immutable field (like `spec.selector` on a Deployment). These fields cannot be modified once a resource is created.
+
+**Common causes:**
+- Changed label selectors in your deployment
+- Modified matchLabels in the spec.selector
+- Updated immutable fields in StatefulSets or other resources
+
+**How to fix this:**
+
+1. **Delete the resource first, then reapply:**
+MD
+            echo '   ```bash'
+            if [ "$RESOURCE_INFO" != "resource" ]; then
+              echo "   kubectl delete $RESOURCE_KIND $RESOURCE_NAME -n $NS"
+            else
+              echo "   kubectl delete <kind> <name> -n $NS"
+            fi
+            echo "   kubectl apply -f <your-manifests>"
+            echo '   ```'
+            cat <<'MD'
+
+2. **Or use a different resource name:**
+   - Rename your deployment/resource
+   - Deploy as a new resource
+   - Remove the old one once the new one is healthy
+
+3. **In CI/CD pipelines:**
+   - Add a pre-deployment step to delete affected resources
+   - Use blue/green or canary deployment strategies
+   - Consider using `kubectl replace --force` (causes downtime)
+
+**Full error output:**
+```
+MD
+            cat /tmp/apply.err
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "::group::Full kubectl error output"
+          cat /tmp/apply.err
+          echo "::endgroup::"
+
+          exit 1
+        fi
+
+        # If there were other errors, show them and exit
+        if [ "$APPLY_SUCCESS" = "false" ]; then
+          echo "::error::kubectl apply failed"
+          cat /tmp/apply.err >&2
+          exit 1
+        fi
 
         # Best-effort JSON summary of apply results
         jq -R -s -c 'split("\n") | map(select(length>0))' /tmp/apply.out > /tmp/apply.json || echo "[]">/tmp/apply.json
