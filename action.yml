@@ -1,6 +1,6 @@
 name: 'Kustomize Apply'
 description: 'Apply a built kustomize overlay to a Kubernetes cluster; waits only on workloads provided by Inspect'
-author: 'KoalaOps'
+author: 'Skyhook'
 
 branding:
   icon: 'upload-cloud'

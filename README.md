@@ -16,13 +16,13 @@ Apply kustomize overlays to Kubernetes clusters with robust metadata extraction 
 ```yaml
 # Typical usage with kustomize-inspect
 - name: Inspect overlay
-  uses: KoalaOps/kustomize-inspect@v1
+  uses: skyhook-io/kustomize-inspect@v1
   id: inspect
   with:
     overlay_dir: deploy/overlays/production
 
 - name: Apply to cluster
-  uses: KoalaOps/kustomize-apply@v1
+  uses: skyhook-io/kustomize-apply@v1
   with:
     overlay_dir: deploy/overlays/production
     namespace: ${{ steps.inspect.outputs.namespace }}
@@ -53,20 +53,20 @@ Apply kustomize overlays to Kubernetes clusters with robust metadata extraction 
 ### Basic deployment with inspect
 ```yaml
 - name: Edit kustomization
-  uses: KoalaOps/kustomize-edit@v1
+  uses: skyhook-io/kustomize-edit@v1
   with:
     overlay_dir: deploy/overlays/staging
     image: backend
     tag: v1.2.3
 
 - name: Inspect changes
-  uses: KoalaOps/kustomize-inspect@v1
+  uses: skyhook-io/kustomize-inspect@v1
   id: inspect
   with:
     overlay_dir: deploy/overlays/staging
 
 - name: Apply to cluster
-  uses: KoalaOps/kustomize-apply@v1
+  uses: skyhook-io/kustomize-apply@v1
   with:
     overlay_dir: deploy/overlays/staging
     namespace: ${{ steps.inspect.outputs.namespace }}
@@ -76,13 +76,13 @@ Apply kustomize overlays to Kubernetes clusters with robust metadata extraction 
 ### Dry run first
 ```yaml
 - name: Inspect
-  uses: KoalaOps/kustomize-inspect@v1
+  uses: skyhook-io/kustomize-inspect@v1
   id: inspect
   with:
     overlay_dir: deploy/overlays/production
 
 - name: Preview changes
-  uses: KoalaOps/kustomize-apply@v1
+  uses: skyhook-io/kustomize-apply@v1
   with:
     overlay_dir: deploy/overlays/production
     namespace: ${{ steps.inspect.outputs.namespace }}
@@ -90,7 +90,7 @@ Apply kustomize overlays to Kubernetes clusters with robust metadata extraction 
 
 - name: Apply if approved
   if: ${{ inputs.approved == 'true' }}
-  uses: KoalaOps/kustomize-apply@v1
+  uses: skyhook-io/kustomize-apply@v1
   with:
     overlay_dir: deploy/overlays/production
     namespace: ${{ steps.inspect.outputs.namespace }}
@@ -100,7 +100,7 @@ Apply kustomize overlays to Kubernetes clusters with robust metadata extraction 
 ### No wait (fire and forget)
 ```yaml
 - name: Quick apply
-  uses: KoalaOps/kustomize-apply@v1
+  uses: skyhook-io/kustomize-apply@v1
   with:
     overlay_dir: deploy/overlays/dev
     namespace: development
@@ -110,7 +110,7 @@ Apply kustomize overlays to Kubernetes clusters with robust metadata extraction 
 ### Server-side apply
 ```yaml
 - name: Apply with SSA
-  uses: KoalaOps/kustomize-apply@v1
+  uses: skyhook-io/kustomize-apply@v1
   with:
     overlay_dir: deploy/overlays/production
     namespace: ${{ steps.inspect.outputs.namespace }}
@@ -127,14 +127,14 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Login to cloud
-        uses: KoalaOps/cloud-login@v1
+        uses: skyhook-io/cloud-login@v1
         with:
           provider: aws
           region: us-east-1
           cluster: production
       
       - name: Update kustomization
-        uses: KoalaOps/kustomize-edit@v1
+        uses: skyhook-io/kustomize-edit@v1
         with:
           overlay_dir: deploy/overlays/production
           image: backend
@@ -144,13 +144,13 @@ jobs:
             deployment-id:${{ github.run_id }}
       
       - name: Inspect changes
-        uses: KoalaOps/kustomize-inspect@v1
+        uses: skyhook-io/kustomize-inspect@v1
         id: inspect
         with:
           overlay_dir: deploy/overlays/production
       
       - name: Apply to cluster
-        uses: KoalaOps/kustomize-apply@v1
+        uses: skyhook-io/kustomize-apply@v1
         with:
           overlay_dir: deploy/overlays/production
           namespace: ${{ steps.inspect.outputs.namespace }}
