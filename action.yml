@@ -1,4 +1,4 @@
-name: 'Kustomize Apply'
+name: 'Skyhook Kustomize Apply'
 description: 'Apply a built kustomize overlay to a Kubernetes cluster; waits only on workloads provided by Inspect'
 author: 'Skyhook'
 
