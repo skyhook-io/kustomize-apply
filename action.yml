@@ -91,8 +91,9 @@ runs:
         if [ "${{ inputs.enable_helm }}" = "true" ]; then
           KUSTOMIZE_FLAGS+=(--enable-helm)
         fi
-        echo "🔨 kustomize build ${KUSTOMIZE_FLAGS[*]}: ${{ inputs.overlay_dir }}"
-        if ! kustomize build "${KUSTOMIZE_FLAGS[@]}" "${{ inputs.overlay_dir }}" > /tmp/manifests.yaml 2> /tmp/kustomize.err; then
+        # Safe-expand possibly-empty array (bash 3.2 + set -u; macOS runners)
+        echo "🔨 kustomize build ${KUSTOMIZE_FLAGS[*]+${KUSTOMIZE_FLAGS[*]}}: ${{ inputs.overlay_dir }}"
+        if ! kustomize build ${KUSTOMIZE_FLAGS[@]+"${KUSTOMIZE_FLAGS[@]}"} "${{ inputs.overlay_dir }}" > /tmp/manifests.yaml 2> /tmp/kustomize.err; then
           echo "::error::kustomize build failed"
           sed -n '1,120p' /tmp/kustomize.err || true
           exit 1
