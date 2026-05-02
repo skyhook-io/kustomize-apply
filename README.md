@@ -41,6 +41,7 @@ Apply kustomize overlays to Kubernetes clusters with robust metadata extraction 
 | `server_side` | Use Server-Side Apply | ❌ | `false` |
 | `wait` | Wait for workloads to be ready | ❌ | `true` |
 | `wait_timeout` | Wait timeout in seconds | ❌ | `300` |
+| `enable_helm` | Pass `--enable-helm` to `kustomize build` (required for overlays using `helmCharts:`). Requires `helm` binary on the runner; fails fast if missing. Set to `false` to skip. | ❌ | `true` |
 
 ## Outputs
 

@@ -39,6 +39,10 @@ inputs:
     description: 'Wait timeout in seconds'
     required: false
     default: '300'
+  enable_helm:
+    description: 'Pass --enable-helm to kustomize build (requires helm binary on runner). When true, fails fast if helm is not installed.'
+    required: false
+    default: 'true'
 
 outputs:
   applied_resources_json:
@@ -58,6 +62,10 @@ runs:
             exit 1
           fi
         done
+        if [ "${{ inputs.enable_helm }}" = "true" ] && ! command -v helm >/dev/null 2>&1; then
+          echo "::error::enable_helm=true but 'helm' binary not found in PATH. Install helm or set enable_helm=false."
+          exit 1
+        fi
         echo "✅ Tools present: kustomize, kubectl, jq"
 
     - name: Validate inputs
@@ -79,8 +87,12 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        echo "🔨 kustomize build: ${{ inputs.overlay_dir }}"
-        if ! kustomize build "${{ inputs.overlay_dir }}" > /tmp/manifests.yaml 2> /tmp/kustomize.err; then
+        KUSTOMIZE_FLAGS=()
+        if [ "${{ inputs.enable_helm }}" = "true" ]; then
+          KUSTOMIZE_FLAGS+=(--enable-helm)
+        fi
+        echo "🔨 kustomize build ${KUSTOMIZE_FLAGS[*]}: ${{ inputs.overlay_dir }}"
+        if ! kustomize build "${KUSTOMIZE_FLAGS[@]}" "${{ inputs.overlay_dir }}" > /tmp/manifests.yaml 2> /tmp/kustomize.err; then
           echo "::error::kustomize build failed"
           sed -n '1,120p' /tmp/kustomize.err || true
           exit 1
