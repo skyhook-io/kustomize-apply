@@ -1,0 +1,12 @@
+{
+  "dependencies": {},
+  "npm": null,
+  "runner_tools": "Existing runner binaries and consumer build inputs are not snapshotted.",
+  "snapshot": "2628a8d09979d40f733a",
+  "source": {
+    "ref": "v1",
+    "repository": "skyhook-io/kustomize-apply",
+    "sha": "48652e65dc512718ad3aea0f1d9354e3886ca2ef"
+  },
+  "tools": {}
+}
