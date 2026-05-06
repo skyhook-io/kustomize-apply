@@ -86,10 +86,10 @@ runs:
         KFILE="$OVERLAY/kustomization.yaml"
         if command -v yq >/dev/null 2>&1; then
           if yq -e '.helmCharts // [] | length > 0' "$KFILE" >/dev/null 2>&1; then
-            HELM_FLAG=(--enable-helm)
+            HELM_FLAG=(--enable-helm --load-restrictor=LoadRestrictionsNone)
           fi
         elif grep -qE '^helmCharts:[[:space:]]*$' "$KFILE" 2>/dev/null; then
-          HELM_FLAG=(--enable-helm)
+          HELM_FLAG=(--enable-helm --load-restrictor=LoadRestrictionsNone)
         fi
 
         echo "🔨 kustomize build: $OVERLAY"
